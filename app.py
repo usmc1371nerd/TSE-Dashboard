@@ -4,10 +4,17 @@ import subprocess
 import os
 import importlib.util
 import webbrowser
+import json  # For JSON file handling
 
 # Path to scripts.txt
 scripts_txt_path = os.path.join(os.path.dirname(__file__), "scripts_folder" 
 "")
+
+# Data files for persistent storage
+DATA_FILES = {
+    "scripts": os.path.join(os.path.dirname(__file__), "scripts_data.json"),
+    "cmds": os.path.join(os.path.dirname(__file__), "cmds_data.json")
+}
 
 class DashboardApp(tk.Tk):
     def __init__(self):
@@ -427,15 +434,30 @@ class DashboardApp(tk.Tk):
         popup.title(f"Edit Script: {script['filename']}")
         popup.geometry("400x400")  # Approx 100x100 px for text area
 
-        text_widget = tk.Text(popup, wrap=tk.WORD, width=50, height=20)
-        text_widget.pack(fill="both", expand=True, padx=10, pady=10)
+        # Frame for description and content
+        edit_frame = tk.Frame(popup)
+        edit_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        desc_label = tk.Label(edit_frame, text="Description:")
+        desc_label.pack(anchor="w")
+        desc_entry = tk.Entry(edit_frame, width=50)
+        desc_entry.pack(fill="x", padx=5, pady=5)
+        desc_entry.insert(0, script["desc"])
+
+        content_label = tk.Label(edit_frame, text="Content:")
+        content_label.pack(anchor="w")
+        text_widget = tk.Text(edit_frame, wrap=tk.WORD, width=50, height=10)
+        text_widget.pack(fill="both", expand=True, padx=5, pady=5)
         text_widget.insert(tk.END, current_content)
 
         def save_changes():
             updated_content = text_widget.get("1.0", tk.END)
+            new_desc = desc_entry.get()
             try:
                 with open(file_path, "w", encoding="utf-8") as f:
                     f.write(updated_content)
+                # Update in self.scripts
+                script["desc"] = new_desc
                 self.refresh_scripts(folder)
                 popup.destroy()
                 messagebox.showinfo("Saved", f"{script['filename']} updated successfully.")
@@ -512,15 +534,30 @@ class DashboardApp(tk.Tk):
         popup.title(f"Edit CMD: {cmd['filename']}")
         popup.geometry("400x400")  # Approx 100x100 px for text area
 
-        text_widget = tk.Text(popup, wrap=tk.WORD, width=50, height=20)
-        text_widget.pack(fill="both", expand=True, padx=10, pady=10)
+        # Frame for description and content
+        edit_frame = tk.Frame(popup)
+        edit_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        desc_label = tk.Label(edit_frame, text="Description:")
+        desc_label.pack(anchor="w")
+        desc_entry = tk.Entry(edit_frame, width=50)
+        desc_entry.pack(fill="x", padx=5, pady=5)
+        desc_entry.insert(0, cmd["desc"])
+
+        content_label = tk.Label(edit_frame, text="Content:")
+        content_label.pack(anchor="w")
+        text_widget = tk.Text(edit_frame, wrap=tk.WORD, width=50, height=10)
+        text_widget.pack(fill="both", expand=True, padx=5, pady=5)
         text_widget.insert(tk.END, current_content)
 
         def save_changes():
             updated_content = text_widget.get("1.0", tk.END)
+            new_desc = desc_entry.get()
             try:
                 with open(file_path, "w", encoding="utf-8") as f:
                     f.write(updated_content)
+                # Update in self.cmds
+                cmd["desc"] = new_desc
                 self.refresh_cmds(folder)
                 popup.destroy()
                 messagebox.showinfo("Saved", f"{cmd['filename']} updated successfully.")
@@ -544,7 +581,35 @@ class DashboardApp(tk.Tk):
         del self.cmds[idx]
         self.refresh_cmds(folder)
 
+    def load_data(self):
+        """Load scripts and cmds data from JSON files."""
+        for key, file_path in DATA_FILES.items():
+            if os.path.exists(file_path):
+                try:
+                    with open(file_path, "r") as f:
+                        data = json.load(f)
+                        if key == "scripts":
+                            self.scripts = data
+                            self.render_scripts(self.scripts_frame, os.path.dirname(file_path))
+                        elif key == "cmds":
+                            self.cmds = data
+                            self.render_cmds(self.cmds_frame, os.path.dirname(file_path))
+                except Exception as e:
+                    messagebox.showerror("Error", f"Could not load {key} data: {e}")
+
+    def save_data(self):
+        """Save scripts and cmds data to JSON files."""
+        for key, file_path in DATA_FILES.items():
+            try:
+                data = self.scripts if key == "scripts" else self.cmds
+                with open(file_path, "w") as f:
+                    json.dump(data, f, indent=4)
+            except Exception as e:
+                messagebox.showerror("Error", f"Could not save {key} data: {e}")
+
 
 if __name__ == "__main__":
     app = DashboardApp()
+    app.load_data()  # Load data at startup
     app.mainloop()
+    app.save_data()  # Save data on exit
