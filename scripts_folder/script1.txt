@@ -9,9 +9,10 @@ CREATE TABLE example_table (
     name VARCHAR(100)
 );
 
--- Example: Insert data
+-- Example: Insert patient data
 INSERT INTO example_table (id, name) VALUES (1, 'Sample Name');
 
 -- Example: Select data
 SELECT * FROM example_table;
+
 

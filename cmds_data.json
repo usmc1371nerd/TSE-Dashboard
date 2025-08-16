@@ -1,5 +1,9 @@
 [
     {
+        "desc": "test",
+        "filename": "new.txt"
+    },
+    {
         "desc": "changed on the reload",
         "filename": "test-new.txt"
     }

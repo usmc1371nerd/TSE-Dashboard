@@ -10,9 +10,5 @@
     {
         "desc": "script1.txt",
         "filename": "script1.txt"
-    },
-    {
-        "desc": "changed",
-        "filename": "test.txt"
     }
 ]

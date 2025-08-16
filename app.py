@@ -62,10 +62,19 @@ class DashboardApp(tk.Tk):
         # --- Scripts Frame ---
         script_frame = tk.LabelFrame(self, text="Scripts", padx=10, pady=10)
         script_frame.pack(fill="x", padx=10, pady=5)
-        self.scripts_frame = script_frame  # Optional, for reference
+        self.scripts_frame = script_frame
 
-        self.scripts_list_frame = tk.Frame(script_frame)
-        self.scripts_list_frame.pack(fill="x", side="left", expand=True)
+        # Canvas + Scrollbar for scripts
+        scripts_canvas = tk.Canvas(script_frame, height=120)
+        scripts_canvas.pack(side="left", fill="both", expand=True)
+        scripts_scrollbar = tk.Scrollbar(script_frame, orient="vertical", command=scripts_canvas.yview)
+        scripts_scrollbar.pack(side="right", fill="y")
+        scripts_canvas.configure(yscrollcommand=scripts_scrollbar.set)
+
+        self.scripts_list_frame = tk.Frame(scripts_canvas)
+        scripts_canvas.create_window((0, 0), window=self.scripts_list_frame, anchor="nw")
+
+        self.scripts_list_frame.bind("<Configure>", lambda e: scripts_canvas.configure(scrollregion=scripts_canvas.bbox("all")))
 
         self.scripts = []
         scripts_folder = os.path.join(os.path.dirname(__file__), "scripts_folder")
@@ -87,9 +96,19 @@ class DashboardApp(tk.Tk):
         # --- CMDs Frame ---
         cmds_frame = tk.LabelFrame(self, text="Saved CMDs", padx=10, pady=10)
         cmds_frame.pack(fill="x", padx=10, pady=5)
-        self.cmds_frame = cmds_frame  # <-- Add this line
-        self.cmds_list_frame = tk.Frame(cmds_frame)
-        self.cmds_list_frame.pack(fill="x", side="left", expand=True)
+        self.cmds_frame = cmds_frame
+
+        # Canvas + Scrollbar for cmds
+        cmds_canvas = tk.Canvas(cmds_frame, height=120)
+        cmds_canvas.pack(side="left", fill="both", expand=True)
+        cmds_scrollbar = tk.Scrollbar(cmds_frame, orient="vertical", command=cmds_canvas.yview)
+        cmds_scrollbar.pack(side="right", fill="y")
+        cmds_canvas.configure(yscrollcommand=cmds_scrollbar.set)
+
+        self.cmds_list_frame = tk.Frame(cmds_canvas)
+        cmds_canvas.create_window((0, 0), window=self.cmds_list_frame, anchor="nw")
+
+        self.cmds_list_frame.bind("<Configure>", lambda e: cmds_canvas.configure(scrollregion=cmds_canvas.bbox("all")))
 
         self.cmds = []
         cmds_folder = os.path.join(os.path.dirname(__file__), "cmds_folder")
@@ -387,8 +406,11 @@ class DashboardApp(tk.Tk):
 
     def create_new_script_file(self, folder):
         filename = simpledialog.askstring("New Script", "Enter new script filename (e.g. script4.txt):", parent=self)
-        if not filename or not filename.endswith(".txt"):
+        if not filename:
             return
+        # Automatically add .txt unless .docx is specified
+        if not (filename.endswith(".txt") or filename.endswith(".docx")):
+            filename += ".txt"
         content = simpledialog.askstring("New Script", "Enter initial content for the script:", parent=self)
         if filename and content is not None:
             path = os.path.join(folder, filename)
@@ -397,15 +419,16 @@ class DashboardApp(tk.Tk):
             desc = simpledialog.askstring("New Script", "Enter description for the script:", parent=self)
             if not desc:
                 desc = filename
-            # Add to self.scripts
             self.scripts.append({"desc": desc, "filename": filename})
-            # Refresh from folder to ensure UI matches files
             self.refresh_scripts(folder)
 
     def create_new_cmd_file(self, folder):
         filename = simpledialog.askstring("New CMD", "Enter new CMD filename (e.g. cmd4.txt):", parent=self)
-        if not filename or not filename.endswith(".txt"):
+        if not filename:
             return
+        # Automatically add .txt unless .docx is specified
+        if not (filename.endswith(".txt") or filename.endswith(".docx")):
+            filename += ".txt"
         content = simpledialog.askstring("New CMD", "Enter initial content for the CMD:", parent=self)
         if filename and content is not None:
             path = os.path.join(folder, filename)
