@@ -6,14 +6,21 @@ import importlib.util
 import webbrowser
 import json  # For JSON file handling
 
+import shutil
 # Path to scripts.txt
-scripts_txt_path = os.path.join(os.path.dirname(__file__), "scripts_folder" 
-"")
+scripts_txt_path = os.path.join(os.path.dirname(__file__), "scripts_folder", "scripts.txt")
+
+# User data folder in Documents
+USER_DOCS = os.path.join(os.path.expanduser("~"), "Documents", "TSE-Dashboard")
+USER_SCRIPTS_FOLDER = os.path.join(USER_DOCS, "scripts_folder")
+USER_CMDS_FOLDER = os.path.join(USER_DOCS, "cmds_folder")
+os.makedirs(USER_SCRIPTS_FOLDER, exist_ok=True)
+os.makedirs(USER_CMDS_FOLDER, exist_ok=True)
 
 # Data files for persistent storage
 DATA_FILES = {
-    "scripts": os.path.join(os.path.dirname(__file__), "scripts_data.json"),
-    "cmds": os.path.join(os.path.dirname(__file__), "cmds_data.json")
+    "scripts": os.path.join(USER_DOCS, "scripts_data.json"),
+    "cmds": os.path.join(USER_DOCS, "cmds_data.json")
 }
 
 class DashboardApp(tk.Tk):
@@ -77,20 +84,26 @@ class DashboardApp(tk.Tk):
         self.scripts_list_frame.bind("<Configure>", lambda e: scripts_canvas.configure(scrollregion=scripts_canvas.bbox("all")))
 
         self.scripts = []
-        scripts_folder = os.path.join(os.path.dirname(__file__), "scripts_folder")
-        if os.path.exists(scripts_folder):
-            for filename in os.listdir(scripts_folder):
+        # Copy boilerplate scripts to user folder if not present
+        install_scripts_folder = os.path.join(os.path.dirname(__file__), "scripts_folder")
+        if os.path.exists(install_scripts_folder):
+            for filename in os.listdir(install_scripts_folder):
+                if filename.endswith(".txt"):
+                    src = os.path.join(install_scripts_folder, filename)
+                    dst = os.path.join(USER_SCRIPTS_FOLDER, filename)
+                    if not os.path.exists(dst):
+                        shutil.copy2(src, dst)
+        # Load scripts from user folder
+        if os.path.exists(USER_SCRIPTS_FOLDER):
+            for filename in os.listdir(USER_SCRIPTS_FOLDER):
                 if filename.endswith(".txt"):
                     self.scripts.append({"desc": filename, "filename": filename})
-
-        self.render_scripts(script_frame, scripts_folder)
-
+        self.render_scripts(script_frame, USER_SCRIPTS_FOLDER)
         script_btn_frame = tk.Frame(script_frame)
         script_btn_frame.pack(side="right", padx=10, pady=5)
-
-        new_script_btn = tk.Button(script_btn_frame, text="New Script File", command=lambda: self.create_new_script_file(scripts_folder))
+        new_script_btn = tk.Button(script_btn_frame, text="New Script File", command=lambda: self.create_new_script_file(USER_SCRIPTS_FOLDER))
         new_script_btn.pack(fill="x", pady=2)
-        refresh_script_btn = tk.Button(script_btn_frame, text="Refresh", command=lambda: self.refresh_scripts(scripts_folder))
+        refresh_script_btn = tk.Button(script_btn_frame, text="Refresh", command=lambda: self.refresh_scripts(USER_SCRIPTS_FOLDER))
         refresh_script_btn.pack(fill="x", pady=2)
 
         # --- CMDs Frame ---
@@ -111,20 +124,26 @@ class DashboardApp(tk.Tk):
         self.cmds_list_frame.bind("<Configure>", lambda e: cmds_canvas.configure(scrollregion=cmds_canvas.bbox("all")))
 
         self.cmds = []
-        cmds_folder = os.path.join(os.path.dirname(__file__), "cmds_folder")
-        if os.path.exists(cmds_folder):
-            for filename in os.listdir(cmds_folder):
+        # Copy boilerplate cmds to user folder if not present
+        install_cmds_folder = os.path.join(os.path.dirname(__file__), "cmds_folder")
+        if os.path.exists(install_cmds_folder):
+            for filename in os.listdir(install_cmds_folder):
+                if filename.endswith(".txt"):
+                    src = os.path.join(install_cmds_folder, filename)
+                    dst = os.path.join(USER_CMDS_FOLDER, filename)
+                    if not os.path.exists(dst):
+                        shutil.copy2(src, dst)
+        # Load cmds from user folder
+        if os.path.exists(USER_CMDS_FOLDER):
+            for filename in os.listdir(USER_CMDS_FOLDER):
                 if filename.endswith(".txt"):
                     self.cmds.append({"desc": "No description", "filename": filename})
-
-        self.render_cmds(cmds_frame, cmds_folder)
-
+        self.render_cmds(cmds_frame, USER_CMDS_FOLDER)
         cmd_btn_frame = tk.Frame(cmds_frame)
         cmd_btn_frame.pack(side="right", padx=10, pady=5)
-
-        add_cmd_btn = tk.Button(cmd_btn_frame, text="New CMD File", command=lambda: self.create_new_cmd_file(cmds_folder))
+        add_cmd_btn = tk.Button(cmd_btn_frame, text="New CMD File", command=lambda: self.create_new_cmd_file(USER_CMDS_FOLDER))
         add_cmd_btn.pack(fill="x", pady=2)
-        refresh_cmd_btn = tk.Button(cmd_btn_frame, text="Refresh", command=lambda: self.refresh_cmds(cmds_folder))
+        refresh_cmd_btn = tk.Button(cmd_btn_frame, text="Refresh", command=lambda: self.refresh_cmds(USER_CMDS_FOLDER))
         refresh_cmd_btn.pack(fill="x", pady=2)
 
         # Notes Frame
@@ -304,7 +323,7 @@ class DashboardApp(tk.Tk):
         save_btn = tk.Button(popup, text="Save", command=save_changes)
         save_btn.pack(side="bottom", fill="x", pady=5)
 
-    def refresh_scripts(self, folder):
+    def refresh_scripts(self, folder=USER_SCRIPTS_FOLDER):
         scripts_dict = {s["filename"]: s["desc"] for s in self.scripts}
         self.scripts.clear()
         if os.path.exists(folder):
@@ -314,7 +333,7 @@ class DashboardApp(tk.Tk):
                     self.scripts.append({"desc": desc, "filename": filename})
         self.render_scripts(self.scripts_frame, folder)
 
-    def refresh_cmds(self, folder):
+    def refresh_cmds(self, folder=USER_CMDS_FOLDER):
         cmds_dict = {c["filename"]: c["desc"] for c in self.cmds}
         self.cmds.clear()
         if os.path.exists(folder):
@@ -492,8 +511,7 @@ class DashboardApp(tk.Tk):
 
     def delete_script(self, idx):
         script = self.scripts[idx]
-        folder = os.path.join(os.path.dirname(__file__), "scripts_folder")
-        file_path = os.path.join(folder, script["filename"])
+        file_path = os.path.join(USER_SCRIPTS_FOLDER, script["filename"])
         # Remove from disk if file exists
         if os.path.exists(file_path):
             try:
@@ -502,7 +520,7 @@ class DashboardApp(tk.Tk):
                 messagebox.showerror("Error", f"Could not delete file: {e}")
         # Remove from list and refresh UI
         del self.scripts[idx]
-        self.refresh_scripts(folder)
+        self.refresh_scripts(USER_SCRIPTS_FOLDER)
 
     def render_cmds(self, parent, cmds_folder):
         for widget in self.cmds_list_frame.winfo_children():
@@ -592,8 +610,7 @@ class DashboardApp(tk.Tk):
 
     def delete_cmd(self, idx):
         cmd = self.cmds[idx]
-        folder = os.path.join(os.path.dirname(__file__), "cmds_folder")
-        file_path = os.path.join(folder, cmd["filename"])
+        file_path = os.path.join(USER_CMDS_FOLDER, cmd["filename"])
         # Remove from disk if file exists
         if os.path.exists(file_path):
             try:
@@ -602,7 +619,7 @@ class DashboardApp(tk.Tk):
                 messagebox.showerror("Error", f"Could not delete file: {e}")
         # Remove from list and refresh UI
         del self.cmds[idx]
-        self.refresh_cmds(folder)
+        self.refresh_cmds(USER_CMDS_FOLDER)
 
     def load_data(self):
         """Load scripts and cmds data from JSON files."""

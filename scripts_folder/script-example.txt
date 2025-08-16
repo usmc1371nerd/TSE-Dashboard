@@ -1,0 +1,11 @@
+-- Filename: example_script.sql
+-- Purpose: Example SQL script for querying a table
+-- Usage: Run in your SQL management tool (e.g., SSMS, Azure Data Studio)
+-- Notes: Replace 'your_table' and 'your_column' with actual table/column names
+
+SELECT TOP 10
+    your_column
+FROM
+    your_table
+WHERE
+    your_column IS NOT NULL;

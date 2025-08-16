@@ -1,0 +1,14 @@
+:: Filename: example_cmd.cmd
+:: Purpose: Example CMD script for basic file operations
+:: Usage: Double-click to run, or execute from command prompt
+:: Notes: Replace 'source.txt' and 'destination.txt' with actual file names
+
+@echo off
+REM Copy a file
+copy source.txt destination.txt
+
+REM List files in current directory
+dir
+
+REM Pause to view output
+pause
