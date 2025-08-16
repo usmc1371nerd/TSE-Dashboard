@@ -234,8 +234,8 @@ class DashboardApp(tk.Tk):
         def save_changes():
             content = text_widget.get("1.0", tk.END)
             try:
-                with open(script_path, "w") as f:
-                    content = f.read()
+                with open(script_path, "w", encoding="utf-8") as f:
+                    f.write(content)
                 print(content)
                   
                 
@@ -273,8 +273,8 @@ class DashboardApp(tk.Tk):
         def save_changes():
             content = text_widget.get("1.0", tk.END)
             try:
-                with open(cmd_path, "w") as f:
-                    content = f.read()
+                with open(cmd_path, "w", encoding="utf-8") as f:
+                    f.write(content)
                 print(content)
                   
                 
@@ -590,10 +590,12 @@ class DashboardApp(tk.Tk):
                         data = json.load(f)
                         if key == "scripts":
                             self.scripts = data
-                            self.render_scripts(self.scripts_frame, os.path.dirname(file_path))
+                            scripts_folder = os.path.join(os.path.dirname(__file__), "scripts_folder")
+                            self.render_scripts(self.scripts_frame, scripts_folder)
                         elif key == "cmds":
                             self.cmds = data
-                            self.render_cmds(self.cmds_frame, os.path.dirname(file_path))
+                            cmds_folder = os.path.join(os.path.dirname(__file__), "cmds_folder")
+                            self.render_cmds(self.cmds_frame, cmds_folder)
                 except Exception as e:
                     messagebox.showerror("Error", f"Could not load {key} data: {e}")
 
