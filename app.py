@@ -13,11 +13,26 @@ scripts_txt_path = os.path.join(os.path.dirname(__file__), "scripts_folder", "sc
 # User data folder (prefer Documents but fallback to home directory)
 home_dir = os.path.expanduser("~")
 documents_path = os.path.join(home_dir, "Documents")
-base_user_dir = os.path.join(documents_path, "TSE-Dashboard") if os.path.isdir(documents_path) else os.path.join(home_dir, "TSE-Dashboard")
+
+# Ensure the Documents directory exists or fall back to the home directory
+if not os.path.isdir(documents_path):
+    try:
+        os.makedirs(documents_path, exist_ok=True)
+    except Exception as e:
+        print(f"Could not create Documents directory ({documents_path}): {e}")
+        documents_path = home_dir
+
+# Recompute directories after verifying the Documents path
+base_user_dir = os.path.join(documents_path, "TSE-Dashboard")
 USER_SCRIPTS_FOLDER = os.path.join(base_user_dir, "scripts_folder")
 USER_CMDS_FOLDER = os.path.join(base_user_dir, "cmds_folder")
-os.makedirs(USER_SCRIPTS_FOLDER, exist_ok=True)
-os.makedirs(USER_CMDS_FOLDER, exist_ok=True)
+
+# Attempt to create required user directories
+try:
+    os.makedirs(USER_SCRIPTS_FOLDER, exist_ok=True)
+    os.makedirs(USER_CMDS_FOLDER, exist_ok=True)
+except Exception as e:
+    print(f"Failed to create user directories under {base_user_dir}: {e}")
 
 # Data files for persistent storage
 DATA_FILES = {
