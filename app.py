@@ -27,12 +27,40 @@ base_user_dir = os.path.join(documents_path, "TSE-Dashboard")
 USER_SCRIPTS_FOLDER = os.path.join(base_user_dir, "scripts_folder")
 USER_CMDS_FOLDER = os.path.join(base_user_dir, "cmds_folder")
 
-# Attempt to create required user directories
-try:
-    os.makedirs(USER_SCRIPTS_FOLDER, exist_ok=True)
-    os.makedirs(USER_CMDS_FOLDER, exist_ok=True)
-except Exception as e:
-    print(f"Failed to create user directories under {base_user_dir}: {e}")
+
+def ensure_user_dirs():
+    """Ensure base and user subdirectories exist.
+
+    Tries to create ``base_user_dir`` and its subdirectories. If creation
+    fails, ``base_user_dir`` falls back to the user's home directory and the
+    subdirectory paths are recalculated and attempted again.
+    Returns ``True`` on success, ``False`` otherwise.
+    """
+
+    global base_user_dir, USER_SCRIPTS_FOLDER, USER_CMDS_FOLDER
+
+    try:
+        os.makedirs(base_user_dir, exist_ok=True)
+        os.makedirs(USER_SCRIPTS_FOLDER, exist_ok=True)
+        os.makedirs(USER_CMDS_FOLDER, exist_ok=True)
+        return True
+    except Exception:
+        try:
+            base_user_dir = home_dir
+            USER_SCRIPTS_FOLDER = os.path.join(base_user_dir, "scripts_folder")
+            USER_CMDS_FOLDER = os.path.join(base_user_dir, "cmds_folder")
+            os.makedirs(base_user_dir, exist_ok=True)
+            os.makedirs(USER_SCRIPTS_FOLDER, exist_ok=True)
+            os.makedirs(USER_CMDS_FOLDER, exist_ok=True)
+            return True
+        except Exception as e:
+            print(f"Failed to create user directories under {base_user_dir}: {e}")
+            return False
+
+
+# Ensure user directories exist and halt if not
+if not ensure_user_dirs():
+    raise SystemExit("Unable to initialize user directories")
 
 # Data files for persistent storage
 DATA_FILES = {
