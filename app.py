@@ -10,17 +10,19 @@ import shutil
 # Path to scripts.txt
 scripts_txt_path = os.path.join(os.path.dirname(__file__), "scripts_folder", "scripts.txt")
 
-# User data folder in Documents
-USER_DOCS = os.path.join(os.path.expanduser("~"), "Documents", "TSE-Dashboard")
-USER_SCRIPTS_FOLDER = os.path.join(USER_DOCS, "scripts_folder")
-USER_CMDS_FOLDER = os.path.join(USER_DOCS, "cmds_folder")
+# User data folder (prefer Documents but fallback to home directory)
+home_dir = os.path.expanduser("~")
+documents_path = os.path.join(home_dir, "Documents")
+base_user_dir = os.path.join(documents_path, "TSE-Dashboard") if os.path.isdir(documents_path) else os.path.join(home_dir, "TSE-Dashboard")
+USER_SCRIPTS_FOLDER = os.path.join(base_user_dir, "scripts_folder")
+USER_CMDS_FOLDER = os.path.join(base_user_dir, "cmds_folder")
 os.makedirs(USER_SCRIPTS_FOLDER, exist_ok=True)
 os.makedirs(USER_CMDS_FOLDER, exist_ok=True)
 
 # Data files for persistent storage
 DATA_FILES = {
-    "scripts": os.path.join(USER_DOCS, "scripts_data.json"),
-    "cmds": os.path.join(USER_DOCS, "cmds_data.json")
+    "scripts": os.path.join(base_user_dir, "scripts_data.json"),
+    "cmds": os.path.join(base_user_dir, "cmds_data.json")
 }
 
 class DashboardApp(tk.Tk):
@@ -461,7 +463,7 @@ class DashboardApp(tk.Tk):
 
     def edit_script(self, idx):
         script = self.scripts[idx]
-        folder = os.path.join(os.path.dirname(__file__), "scripts_folder")
+        folder = USER_SCRIPTS_FOLDER
         file_path = os.path.join(folder, script["filename"])
 
         # Load current file content
@@ -560,7 +562,7 @@ class DashboardApp(tk.Tk):
 
     def edit_cmd(self, idx):
         cmd = self.cmds[idx]
-        folder = os.path.join(os.path.dirname(__file__), "cmds_folder")
+        folder = USER_CMDS_FOLDER
         file_path = os.path.join(folder, cmd["filename"])
 
         # Load current file content
@@ -630,12 +632,10 @@ class DashboardApp(tk.Tk):
                         data = json.load(f)
                         if key == "scripts":
                             self.scripts = data
-                            scripts_folder = os.path.join(os.path.dirname(__file__), "scripts_folder")
-                            self.render_scripts(self.scripts_frame, scripts_folder)
+                            self.render_scripts(self.scripts_frame, USER_SCRIPTS_FOLDER)
                         elif key == "cmds":
                             self.cmds = data
-                            cmds_folder = os.path.join(os.path.dirname(__file__), "cmds_folder")
-                            self.render_cmds(self.cmds_frame, cmds_folder)
+                            self.render_cmds(self.cmds_frame, USER_CMDS_FOLDER)
                 except Exception as e:
                     messagebox.showerror("Error", f"Could not load {key} data: {e}")
 
